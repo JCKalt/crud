@@ -47,11 +47,22 @@ export const handler = async (event, context) => {
         } else {
             secretStatus = "Invalid secret key provided.";
             console.log("key bad");
+            return {
+              statusCode: 403,
+              body: JSON.stringify({ error: secretStatus }),
+              headers,
+            };  
         }
       }
     }
     else {
       console.log("Check 2: Authorization header is missing");
+      secretStatus = "Secret key is missing.";
+      return {
+        statusCode: 401,
+        body: JSON.stringify({ error: secretStatus }),
+        headers,
+      };
     }
     console.log("SecretStatus:", secretStatus);
 
