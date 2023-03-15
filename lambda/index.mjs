@@ -12,8 +12,9 @@ const client = new DynamoDBClient({});
 
 const dynamo = DynamoDBDocumentClient.from(client);
 
-const tableName = "http-crud-tutorial-items";
+const tableName = "purify-config";
 const secretKey = "a8cbdc83bad52ed9b2f1a59fc5833b19";
+const timestamp = 12345;
 
 export const handler = async (event, context) => {
   let body;
@@ -23,6 +24,7 @@ export const handler = async (event, context) => {
   };
   let secretStatus = "Secret key not provided or invalid.";
   console.log("Headers:", event.headers);
+  console.log("Path Parameters:", event.pathParameters);
 
   const authHeader = event.headers.Authorization || event.headers.authorization;
   if (!authHeader) {
@@ -67,23 +69,25 @@ export const handler = async (event, context) => {
     console.log("SecretStatus:", secretStatus);
 
     switch (event.routeKey) {
-      case "DELETE /items/{id}":
+      case "DELETE /items/{serial}":
         await dynamo.send(
           new DeleteCommand({
             TableName: tableName,
             Key: {
-              id: event.pathParameters.id,
+              serial: event.pathParameters.serial,
+              timestamp: timestamp
             },
           })
         );
-        body = `Deleted item ${event.pathParameters.id}`;
+        body = `Deleted item ${event.pathParameters.serial}`;
         break;
-      case "GET /items/{id}":
+      case "GET /items/{serial}":
         body = await dynamo.send(
           new GetCommand({
             TableName: tableName,
             Key: {
-              id: event.pathParameters.id,
+              serial: event.pathParameters.serial,
+              timestamp: timestamp
             },
           })
         );
@@ -101,13 +105,13 @@ export const handler = async (event, context) => {
           new PutCommand({
             TableName: tableName,
             Item: {
-              id: requestJSON.id,
-              price: requestJSON.price,
-              name: requestJSON.name,
+              serial: requestJSON.serial,
+              timestamp: requestJSON.timestamp,
+              payload: requestJSON.payload,
             },
           })
         );
-        body = `Put item ${requestJSON.id}`;
+        body = `Put item ${requestJSON.serial}`;
         break;
       default:
         throw new Error(`Unsupported route: "${event.routeKey}"`);
