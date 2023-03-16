@@ -14,7 +14,6 @@ const dynamo = DynamoDBDocumentClient.from(client);
 
 const tableName = "purify-config";
 const secretKey = "a8cbdc83bad52ed9b2f1a59fc5833b19";
-const timestamp = 12345;
 
 export const handler = async (event, context) => {
   let body;
@@ -69,25 +68,25 @@ export const handler = async (event, context) => {
     console.log("SecretStatus:", secretStatus);
 
     switch (event.routeKey) {
-      case "DELETE /items/{serial}":
+      case "DELETE /items/{serial}/{timestamp}":
         await dynamo.send(
           new DeleteCommand({
             TableName: tableName,
             Key: {
               serial: event.pathParameters.serial,
-              timestamp: timestamp
+              timestamp: parseInt(event.pathParameters.timestamp)
             },
           })
         );
-        body = `Deleted item ${event.pathParameters.serial}`;
+        body = `Deleted item serial=${event.pathParameters.serial} timestamp=${event.pathParameters.timestamp}`;
         break;
-      case "GET /items/{serial}":
+      case "GET /items/{serial}/{timestamp}":
         body = await dynamo.send(
           new GetCommand({
             TableName: tableName,
             Key: {
               serial: event.pathParameters.serial,
-              timestamp: timestamp
+              timestamp: parseInt(event.pathParameters.timestamp)
             },
           })
         );
