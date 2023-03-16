@@ -1,5 +1,4 @@
 #!/bin/bash
-
 curl -X "PUT" \
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer a8cbdc83bad52ed9b2f1a59fc5833b19" \
@@ -8,9 +7,19 @@ curl -X "PUT" \
   "serial": "123",
   "timestamp": 12345,
   "payload": {
-        "pettype": "cat",
-        "name": "theo"
-  }
+      "active": {
+          "name": "Clean",
+          "off_at": 0,
+          "on_at": 0
+      }
+  },
+  "thresholds": [
+      {
+        "name": "Clean",
+        "off_at": 0,
+        "on_at": 0
+      }
+  ]
 }
 EOF
 )" \
