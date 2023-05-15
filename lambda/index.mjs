@@ -8,6 +8,13 @@ import {
   DeleteCommand,
 } from "@aws-sdk/lib-dynamodb";
 
+import { v4 as uuid } from "uuid";
+
+// Generate a UUID
+const requestId = uuid();
+// Log the UUID
+console.log(`Request ID: ${requestId}`);
+
 const client = new DynamoDBClient({});
 
 const dynamo = DynamoDBDocumentClient.from(client);
@@ -69,16 +76,31 @@ export const handler = async (event, context) => {
 
     switch (event.routeKey) {
       case "DELETE /items/{serial}/{timestamp}":
-        await dynamo.send(
-          new DeleteCommand({
+        const itemToDelete = await dynamo.send(
+          new GetCommand({
             TableName: tableName,
             Key: {
               serial: event.pathParameters.serial,
-              timestamp: parseInt(event.pathParameters.timestamp)
+              timestamp: parseInt(event.pathParameters.timestamp),
             },
           })
         );
-        body = `Deleted item serial=${event.pathParameters.serial} timestamp=${event.pathParameters.timestamp}`;
+      
+        if (itemToDelete.Item) {
+          await dynamo.send(
+            new DeleteCommand({
+              TableName: tableName,
+              Key: {
+                serial: event.pathParameters.serial,
+                timestamp: parseInt(event.pathParameters.timestamp),
+              },
+            })
+          );
+          body = `Deleted item serial=${event.pathParameters.serial} timestamp=${event.pathParameters.timestamp}`;
+        } else {
+          statusCode = 404;
+          body = `Item with serial=${event.pathParameters.serial} and timestamp=${event.pathParameters.timestamp} not found`;
+        }
         break;
       case "GET /items/{serial}/{timestamp}":
         body = await dynamo.send(
@@ -107,6 +129,7 @@ export const handler = async (event, context) => {
               serial: requestJSON.serial,
               timestamp: requestJSON.timestamp,
               payload: requestJSON.payload,
+              thresholds: requestJSON.thresholds
             },
           })
         );
